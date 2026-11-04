@@ -1,45 +1,44 @@
 name: Build and Push Disha Expense Tracker
 
 on:
-push:
-branches:
-- main
-
-workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-id-token: write
-contents: read
+  id-token: write
+  contents: read
 
 env:
-AWS_REGION: ap-south-1
-ECR_REPOSITORY: disha-expense-tracker
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: disha-expense-tracker
 
 jobs:
-build-and-push:
-name: Build and Push Docker Image
-runs-on: ubuntu-latest
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Checkout source code
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
-  - name: Configure AWS credentials
-    uses: aws-actions/configure-aws-credentials@v4
-    with:
-      role-to-assume: arn:aws:iam::056520431061:role/DishaGitHubActionsECRRole
-      aws-region: ap-south-1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::056520431061:role/DishaGitHubActionsECRRole
+          aws-region: ap-south-1
 
-  - name: Login to Amazon ECR
-    id: login-ecr
-    uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-  - name: Build and push Docker image
-    env:
-      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      IMAGE_TAG: ${{ github.sha }}
-    run: |
-      docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-      docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
