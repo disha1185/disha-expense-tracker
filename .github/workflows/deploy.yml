@@ -23,6 +23,18 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Check GitHub OIDC claims
+        shell: bash
+        run: |
+          TOKEN=$(curl -fsS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['value'])")
+
+          export TOKEN
+
+          python3 -c 'import os,json,base64; p=os.environ["TOKEN"].split(".")[1]; p+="="*((4-len(p)%4)%4); d=json.loads(base64.urlsafe_b64decode(p)); print("ISS:",d.get("iss")); print("AUD:",d.get("aud")); print("SUB:",d.get("sub"))'
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -42,3 +54,4 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
